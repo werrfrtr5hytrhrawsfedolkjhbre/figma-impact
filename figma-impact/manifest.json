@@ -1,0 +1,13 @@
+{
+  "name": "DSH 变更影响分析",
+  "id": "1500000000000000328",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "permissions": ["currentuser"],
+  "networkAccess": {
+    "allowedDomains": ["https://api.deepseek.com", "https://api.openai.com"]
+  }
+}

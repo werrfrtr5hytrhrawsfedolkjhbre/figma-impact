@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: var(--figma-color-bg, #ffffff);
+    --bg-secondary: var(--figma-color-bg-secondary, #f5f5f5);
+    --border: var(--figma-color-border, #e6e6e6);
+    --text: var(--figma-color-text, #1e1e1e);
+    --text-secondary: var(--figma-color-text-secondary, #7a7a7a);
+    --brand: #0d99ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font: 12px/1.45 "Inter", -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--text); background: var(--bg);
+    display: flex; flex-direction: column; min-height: 100%;
+  }
+  header { padding: 12px 14px 8px; }
+  h1 { font-size: 13px; margin: 0; display: flex; align-items: center; gap: 6px; }
+  .badge {
+    font-size: 9px; font-weight: 500; padding: 1px 5px; border-radius: 3px;
+    background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border);
+  }
+  .sub { margin: 4px 0 0; font-size: 11px; color: var(--text-secondary); }
+
+  .session {
+    display: flex; align-items: center; gap: 8px;
+    margin: 0 14px 10px; padding: 7px 9px;
+    border: 1px solid var(--border); border-radius: 7px;
+  }
+  .session.reviewing { border-color: #f24336; }
+  .session #sessionText { flex: 1; font-size: 11px; color: var(--text-secondary); }
+  .session button { padding: 5px 8px; font-size: 11px; }
+
+  button {
+    font: inherit; padding: 6px 10px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text);
+  }
+  button:hover:not(:disabled) { border-color: var(--brand); }
+  button:disabled { opacity: 0.45; cursor: default; }
+  button.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+  button.ghost { background: transparent; }
+  button.next-step { box-shadow: 0 0 0 2px rgba(13, 153, 255, 0.5); }
+
+  .actions {
+    display: flex; gap: 8px; padding: 0 14px 10px;
+    align-items: center; flex-wrap: wrap;
+  }
+  .actions .push-right { margin-left: auto; }
+
+  #status { padding: 0 14px 8px; font-size: 11px; color: var(--brand); font-weight: 500; }
+  #status.error { color: #c0392b; }
+
+  .top-row { display: flex; gap: 8px; padding: 0 14px 10px; align-items: stretch; }
+  .stats { flex: 1 1 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; min-width: 0; }
+  .stat { border: 1px solid var(--border); border-radius: 6px; padding: 5px 7px; }
+  .stat .k2 {
+    font-size: 10px; color: var(--text-secondary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .stat .v2 { font-size: 13px; font-weight: 600; }
+  .top-actions {
+    flex: 0 0 auto; display: flex; flex-direction: column; gap: 6px;
+    justify-content: center;
+  }
+  .top-actions button { padding: 5px 8px; font-size: 11px; white-space: nowrap; }
+
+  .breakdown {
+    padding: 0 14px 10px; color: var(--text-secondary);
+    font-size: 11px; line-height: 1.7;
+  }
+  .breakdown .line { display: block; }
+
+  .selection {
+    margin: 0 14px 10px; padding: 7px 9px;
+    border: 1px solid var(--border); border-radius: 7px;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .sel-main { flex: 1 1 auto; min-width: 0; }
+  .selection .k { font-size: 10px; color: var(--text-secondary); }
+  .selection .v { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sel-scope { flex: 0 0 auto; max-width: 58%; text-align: right; }
+  .scope-line { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+  .scope-line span { font-size: 10px; color: var(--text-secondary); }
+  .sel-scope select {
+    padding: 3px 6px; border: 1px solid var(--border); border-radius: 5px;
+    background: var(--bg); color: var(--text); font: inherit; font-size: 11px;
+    max-width: 100%;
+  }
+  #scopeHint {
+    margin-top: 3px; font-size: 10px; color: var(--text-secondary); opacity: 0.85;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .change-wrap { position: relative; margin: 0 14px 10px; }
+  #changeText {
+    display: block; width: 100%; margin: 0;
+    padding: 7px 64px 7px 8px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg); color: var(--text); font: inherit; font-size: 12px;
+    resize: vertical; min-height: 38px;
+  }
+  #changeText:focus { outline: none; border-color: var(--brand); }
+  .history-btn {
+    position: absolute; top: 6px; right: 6px;
+    font-size: 10px; padding: 2px 6px; border-radius: 4px;
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text-secondary); cursor: pointer;
+  }
+  .history-menu {
+    position: absolute; top: 32px; right: 0; min-width: 220px; max-width: 100%;
+    display: none; z-index: 20; overflow: hidden;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  }
+  .history-menu.open { display: block; }
+  .history-item {
+    padding: 6px 8px; font-size: 11px; cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .history-item:hover { background: var(--bg-secondary); }
+  .history-empty { padding: 8px; font-size: 11px; color: var(--text-secondary); }
+
+  .change-tip {
+    margin: -4px 14px 10px; font-size: 10px; line-height: 1.5;
+    color: var(--text-secondary); opacity: 0.85;
+  }
+
+  .semantic-row {
+    display: flex; align-items: center; gap: 6px;
+    margin: -4px 14px 10px; font-size: 11px; color: var(--text-secondary);
+  }
+  .semantic-row select {
+    padding: 3px 6px; border: 1px solid var(--border); border-radius: 5px;
+    background: var(--bg); color: var(--text); font: inherit; font-size: 11px;
+  }
+
+  .opt {
+    display: flex; align-items: center; gap: 6px;
+    margin: 0 14px 10px; color: var(--text-secondary); font-size: 11px; cursor: pointer;
+  }
+  .opt input { accent-color: var(--brand); margin: 0; }
+
+  .ai-box {
+    margin: 0 14px 10px; border: 1px solid var(--border); border-radius: 7px;
+    background: var(--bg-secondary);
+  }
+  .ai-box summary { cursor: pointer; padding: 7px 9px; font-weight: 600; }
+  .ai-inner { padding: 0 9px 9px; display: flex; flex-direction: column; gap: 6px; }
+  .key-row { display: flex; gap: 6px; }
+  .key-row input {
+    flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--border);
+    border-radius: 6px; background: var(--bg); color: var(--text); font: inherit;
+  }
+  .ai-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+  .ai-row span { flex: 0 0 44px; }
+  .ai-row select, .ai-row input {
+    flex: 1; min-width: 0; padding: 5px 7px; border: 1px solid var(--border);
+    border-radius: 6px; background: var(--bg); color: var(--text);
+    font: inherit; font-size: 11px;
+  }
+
+  nav.tabs { display: flex; gap: 2px; padding: 0 14px; border-bottom: 1px solid var(--border); }
+  nav.tabs button {
+    border: none; background: transparent; padding: 7px 8px; border-radius: 0;
+    color: var(--text-secondary); border-bottom: 2px solid transparent;
+  }
+  nav.tabs button.active { color: var(--text); border-bottom-color: var(--brand); }
+
+  #pane { flex: 1; overflow: auto; padding: 10px 0 20px; min-height: 150px; }
+  .group-title {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px 4px; font-size: 11px; font-weight: 600; color: var(--text-secondary);
+  }
+  .empty { padding: 24px 14px; text-align: center; color: var(--text-secondary); line-height: 1.6; }
+  .hint { padding: 2px 14px 4px; font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+  .muted { color: var(--text-secondary); }
+
+  .row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 14px; cursor: pointer; border-left: 2px solid transparent;
+  }
+  .row:hover { background: var(--bg-secondary); }
+  .row.plain { cursor: default; }
+  .row .from { color: var(--text-secondary); font-size: 10px; min-width: 24px; }
+  .row .to { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tag {
+    font-size: 10px; padding: 0 5px; border-radius: 3px; max-width: 45%;
+    border: 1px solid var(--border); color: var(--text-secondary);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .tag.src { border-color: var(--brand); color: var(--brand); }
+  .tag.ai { border-color: #8e44ad; color: #8e44ad; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .dot.l1 { background: #f24336; }
+  .dot.l2 { background: #ff8b3d; }
+  .dot.l3 { background: #f2c94c; }
+
+  .subtabs { display: flex; gap: 6px; padding: 4px 14px 8px; flex-wrap: wrap; }
+  .subtab {
+    padding: 3px 8px; font-size: 11px; border-radius: 12px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text-secondary); cursor: pointer;
+  }
+  .subtab.active { border-color: var(--brand); color: var(--brand); }
+
+  .edit-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 14px; cursor: pointer;
+  }
+  .edit-row:hover { background: var(--bg-secondary); }
+  .edit-row.invalid { opacity: 0.55; }
+  .edit-row input { margin: 0; accent-color: var(--brand); cursor: pointer; }
+  .edit-row .kind {
+    flex: 0 0 auto; font-size: 9px; padding: 0 4px; border-radius: 3px;
+    border: 1px solid var(--border); color: var(--text-secondary);
+  }
+  .edit-row .who { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .edit-row .diff { flex: 0 0 auto; color: var(--text-secondary); }
+  .edit-why { padding: 0 14px 6px 34px; color: var(--text-secondary); font-size: 10px; }
+
+  #resizeHandle {
+    position: fixed; right: 0; bottom: 0; width: 14px; height: 14px;
+    cursor: nwse-resize; background: linear-gradient(135deg, transparent 50%, var(--border) 50%);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>DSH 变更影响分析 <span class="badge">M0 依赖图</span></h1>
+  <p class="sub">只读扫图 · 不改动设计稿 · 可选 AI 分析</p>
+</header>
+
+<div class="session" id="sessionBar">
+  <span id="sessionText">未开始评审</span>
+  <button id="startReview" disabled title="冻结当前分析结果，进入评审模式：期间的改动会被记录，结算时逐条对账">开始评审</button>
+  <button id="endReview" disabled title="仅发起者可点：对标记节点做对账，并列出未标记却被改动的越界项">结束评审</button>
+</div>
+
+<div id="status" class="status">准备扫描…</div>
+
+<div class="top-row">
+  <div class="stats" id="stats"></div>
+  <div class="top-actions">
+    <button id="scan" class="primary" title="重新读取整个文件，重建依赖图：节点、原型跳转、组件实例、样式引用">重新扫描</button>
+    <button id="export" class="ghost" title="把当前依赖图的节点和边以 JSON 复制到剪贴板，方便外部排查">导出 JSON</button>
+  </div>
+</div>
+<div class="breakdown" id="breakdown"></div>
+
+<div class="selection" id="selection">
+  <div class="sel-main">
+    <div class="k">当前选中</div>
+    <div class="v" id="selName">未选中</div>
+  </div>
+  <div class="sel-scope">
+    <div class="scope-line">
+      <span>范围</span>
+      <select id="editScope">
+        <option value="related" selected>选中节点 + 相关范围</option>
+        <option value="node">仅选中节点</option>
+        <option value="instances">同组件的所有实例</option>
+        <option value="file">整个文件</option>
+      </select>
+    </div>
+    <div id="scopeHint"></div>
+  </div>
+</div>
+
+<div class="actions primary-actions">
+  <button id="an1" disabled title="从当前选中节点出发，用依赖图算出直接 / 间接 / 潜在三级影响，并在画布上标出来">影响节点显示</button>
+  <button id="an2" disabled title="同样跑一遍图传播，再让 AI 为每个受影响节点写一句语义说明（需先接入 AI）">AI 影响分析</button>
+  <button id="backAnchor" class="ghost" disabled title="把画布选中恢复到本次分析的起点；点列表查看节点后用它返回">回到锚点</button>
+  <button id="clearMarks" class="ghost" title="删除画布上所有 [DSH] 标记图层，不会改动设计稿本身">清除标记</button>
+  <button id="suggestBtn" class="primary push-right" disabled title="基于影响集合生成可执行的修改指令，校验后勾选应用；Ctrl+Z 可整批撤销">影响节点修改建议</button>
+</div>
+
+<div class="change-wrap">
+  <textarea id="changeText" rows="2" placeholder="用一句话描述变更，例如：把【机制】改成宋体加粗，字号 15"></textarea>
+  <button id="historyBtn" class="history-btn" title="最近使用的变更描述（最多 6 条，只存本机）">历史 ▾</button>
+  <div class="history-menu" id="historyMenu"></div>
+</div>
+<div class="change-tip" id="changeTip">
+  用【】或[]或“”包住的片段 = 只改这几个字；不写括号 = 改整段（如：把【机制】改成宋体加粗）
+</div>
+
+<div class="semantic-row">
+  语义检索
+  <select id="semanticLevel">
+    <option value="strict">严 · 只留高置信</option>
+    <option value="medium" selected>中 · 同概念 / 同状态</option>
+    <option value="broad">宽 · 含泛相关</option>
+  </select>
+  <span class="muted">仅用于「AI 影响分析」</span>
+</div>
+
+<label class="opt">
+  <input type="checkbox" id="showCallout" checked />
+  显示建议气泡（协作者可在图层里直接隐藏「建议气泡」层）
+</label>
+
+<details class="ai-box">
+  <summary>AI 接入</summary>
+  <div class="ai-inner">
+    <div class="ai-row">
+      <span>服务商</span>
+      <select id="aiProvider">
+        <option value="deepseek">DeepSeek</option>
+        <option value="openai">OpenAI</option>
+        <option value="custom">自定义（OpenAI 兼容）</option>
+      </select>
+    </div>
+    <div class="ai-row" id="baseRow" style="display:none">
+      <span>Base</span>
+      <input id="aiBase" placeholder="https://your-proxy.com" />
+    </div>
+    <div class="ai-row">
+      <span>模型</span>
+      <input id="aiModel" placeholder="deepseek-flash / gpt-4o-mini" />
+    </div>
+    <div class="key-row">
+      <input id="apiKey" type="password" placeholder="API Key（只存本机）" />
+      <button id="saveKey">保存</button>
+      <button id="testKey" class="ghost" title="用当前服务商的接口验证 Key：DeepSeek 查余额，OpenAI / 自定义查模型列表">测试</button>
+    </div>
+    <div class="hint" id="keyNote">未接入 AI</div>
+  </div>
+</details>
+
+<nav class="tabs">
+  <button data-tab="proto" class="active">页面跳转</button>
+  <button data-tab="comp">组件使用</button>
+  <button data-tab="graph">上下游</button>
+  <button data-tab="impact">影响</button>
+  <button data-tab="review">评审</button>
+  <button data-tab="suggest">建议</button>
+</nav>
+
+<div id="pane"><div class="hint">扫描完成后这里会列出关系。</div></div>
+
+<div id="resizeHandle"></div>
+
+<script>
+(function () {
+  var LEVEL_NAMES = { 1: '直接影响', 2: '间接影响', 3: '潜在影响' };
+  var MAX_ROWS = 300;
+
+  var selectedId = null;
+  var selectedType = null;
+  var activeTab = 'proto';
+  var activeView = 'all';
+  var hasApiKey = false;
+  var impactData = null;   // 当前显示 / 下游使用的一份（可能来自①或②）
+  var baseData = null;     // ① 的结构集合（不受范围影响），② 的输入
+  var graph = null;
+  var reviewState = null;
+  var suggestData = null;
+  var selectedEdits = new Set();
+  var appliedEdits = new Set();
+  var appliedInfo = new Map();
+  var appliedAfter = new Map();
+  var pendingAI = false;       // 等①（影响节点显示）回来，继续②
+  var pendingStage = null;     // 'base' | 'analysis'：等链条前一步完成后继续
+  var suggestBusy = false;
+
+  var elStatus = document.getElementById('status');
+  var elStats = document.getElementById('stats');
+  var elBreakdown = document.getElementById('breakdown');
+  var elPane = document.getElementById('pane');
+  var elSelName = document.getElementById('selName');
+  var elScope = document.getElementById('editScope');
+  var elScopeHint = document.getElementById('scopeHint');
+  var elChange = document.getElementById('changeText');
+  var elShowCallout = document.getElementById('showCallout');
+  var elKeyNote = document.getElementById('keyNote');
+  var elApiKey = document.getElementById('apiKey');
+  var elProvider = document.getElementById('aiProvider');
+  var elBase = document.getElementById('aiBase');
+  var elBaseRow = document.getElementById('baseRow');
+  var elModel = document.getElementById('aiModel');
+  var elHistoryBtn = document.getElementById('historyBtn');
+  var elHistoryMenu = document.getElementById('historyMenu');
+  var elChangeTip = document.getElementById('changeTip');
+  var elSemanticLevel = document.getElementById('semanticLevel');
+  var changeHistory = [];
+  var btnAn1 = document.getElementById('an1');
+  var btnAn2 = document.getElementById('an2');
+  var btnSuggest = document.getElementById('suggestBtn');
+  var btnBackAnchor = document.getElementById('backAnchor');
+  var btnClear = document.getElementById('clearMarks');
+  var btnScan = document.getElementById('scan');
+  var btnExport = document.getElementById('export');
+  var elStartReview = document.getElementById('startReview');
+  var elEndReview = document.getElementById('endReview');
+  var elSessionBar = document.getElementById('sessionBar');
+  var elSessionText = document.getElementById('sessionText');
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function fmt(n) { return typeof n === 'number' ? n.toLocaleString() : '—'; }
+  function setStatus(t, err) {
+    elStatus.textContent = t;
+    elStatus.className = 'status' + (err ? ' error' : '');
+  }
+  function nameOf(id) {
+    if (!graph || !graph.nodes) return id;
+    for (var i = 0; i < graph.nodes.length; i++) {
+      if (graph.nodes[i].id === id) return graph.nodes[i].name;
+    }
+    return id;
+  }
+  function nodeById(id) {
+    if (!graph || !graph.nodes) return null;
+    for (var i = 0; i < graph.nodes.length; i++) {
+      if (graph.nodes[i].id === id) return graph.nodes[i];
+    }
+    return null;
+  }
+  function isReviewing() {
+    return !!(reviewState && reviewState.phase === 'REVIEWING');
+  }
+  function post(msg) { parent.postMessage({ pluginMessage: msg }, '*'); }
+
+  // ---------- 顶部统计 ----------
+  function renderStats(g) {
+    var ec = g.edgeCount || {};
+    var r = g.reactions || { objects: 0, navigation: 0, other: 0 };
+    var cells = [
+      ['节点', fmt(g.nodeCount)],
+      ['原型跳转', fmt(r.navigation || 0)],
+      ['组件实例', fmt(ec.instance || 0)],
+      ['样式引用', fmt(ec.style || 0)]
+    ];
+    elStats.innerHTML = cells.map(function (c) {
+      return '<div class="stat"><div class="k2">' + esc(c[0]) + '</div><div class="v2">' + esc(c[1]) + '</div></div>';
+    }).join('');
+
+    var lines = [
+      g.fileName + ' · ' + g.pageCount + ' 页 · ' + fmt(g.nodeCount) + ' 节点 · ' + g.durationMs + ' ms',
+      '跳转 ' + fmt(ec.prototype || 0) + ' · 实例 ' + fmt(ec.instance || 0) +
+        ' · 父子 ' + fmt(ec.child || 0) + ' · 样式 ' + fmt(ec.style || 0) + '（不计入影响）',
+      '原型反应 ' + r.objects + ' · 导航到画板 ' + r.navigation + ' · 其它动作 ' + r.other +
+        '（设置变量 / 返回 / 关闭等）'
+    ];
+    elBreakdown.innerHTML = lines.map(function (line) {
+      return '<span class="line">' + esc(line) + '</span>';
+    }).join('');
+  }
+
+  // ---------- 各栏渲染 ----------
+  function renderProto() {
+    if (!graph) { elPane.innerHTML = '<div class="empty">还没有扫描结果。</div>'; return; }
+    var edges = graph.edges.filter(function (e) { return e.type === 'prototype'; });
+    if (!edges.length) {
+      elPane.innerHTML = '<div class="empty">这个文件里没有原型跳转。<br>在 Figma 里给按钮加 Prototype 交互后重新扫描。</div>';
+      return;
+    }
+    var html = '<div class="group-title">原型跳转（' + edges.length + '）</div>';
+    edges.slice(0, MAX_ROWS).forEach(function (e) {
+      html += '<div class="row" data-select="' + esc(e.from) + '">' +
+        '<span class="to">' + esc(nameOf(e.from)) + '</span>' +
+        '<span class="tag">' + esc(e.trigger || '') + '</span>' +
+        '<span class="from">→</span>' +
+        '<span class="to">' + esc(nameOf(e.to)) + '</span></div>';
+    });
+    elPane.innerHTML = html;
+  }
+
+  function renderComp() {
+    if (!graph) { elPane.innerHTML = '<div class="empty">还没有扫描结果。</div>'; return; }
+    var edges = graph.edges.filter(function (e) { return e.type === 'instance'; });
+    if (!edges.length) {
+      elPane.innerHTML = '<div class="empty">这个文件里没有组件实例。</div>';
+      return;
+    }
+    var groups = {};
+    edges.forEach(function (e) {
+      (groups[e.to] = groups[e.to] || []).push(e.from);
+    });
+    var keys = Object.keys(groups).sort(function (a, b) {
+      return groups[b].length - groups[a].length;
+    });
+    var html = '<div class="group-title">组件使用（' + keys.length + ' 个组件 · ' + edges.length + ' 个实例）</div>';
+    keys.slice(0, MAX_ROWS).forEach(function (key) {
+      var list = groups[key];
+      html += '<div class="row">' +
+        '<span class="to">' + esc(nameOf(key)) + '</span>' +
+        '<span class="tag">' + list.length + ' 个实例</span></div>';
+      list.slice(0, 12).forEach(function (id) {
+        html += '<div class="row" data-select="' + esc(id) + '">' +
+          '<span class="from">·</span><span class="to">' + esc(nameOf(id)) + '</span></div>';
+      });
+    });
+    elPane.innerHTML = html;
+  }
+
+  function renderGraphTab() {
+    if (!graph) { elPane.innerHTML = '<div class="empty">还没有扫描结果。</div>'; return; }
+    if (!selectedId) {
+      elPane.innerHTML = '<div class="empty">先在画布上选中一个节点，<br>或者在上面两个列表里点一条。</div>';
+      return;
+    }
+    var rec = nodeById(selectedId);
+    if (!rec) {
+      elPane.innerHTML = '<div class="empty">选中的节点不在图里。<br>它可能在实例内部（实例内部默认不展开）。</div>';
+      return;
+    }
+    var up = graph.edges.filter(function (e) { return e.to === selectedId; });
+    var down = graph.edges.filter(function (e) { return e.from === selectedId; });
+
+    var html = '<div class="group-title">' + esc(rec.name) + '（' + esc(rec.type) + '）</div>';
+    html += '<div class="group-title">上游 · 谁依赖它（' + up.length + '）</div>';
+    if (!up.length) html += '<div class="hint">没有其它节点依赖它。</div>';
+    up.slice(0, MAX_ROWS).forEach(function (e) {
+      html += '<div class="row" data-select="' + esc(e.from) + '">' +
+        '<span class="to">' + esc(nameOf(e.from)) + '</span>' +
+        '<span class="tag">' + esc(e.type) + '</span></div>';
+    });
+    html += '<div class="group-title">下游 · 它依赖谁（' + down.length + '）</div>';
+    if (!down.length) html += '<div class="hint">它没有依赖其它带关系的节点。</div>';
+    down.slice(0, MAX_ROWS).forEach(function (e) {
+      html += '<div class="row" data-select="' + esc(e.to) + '">' +
+        '<span class="to">' + esc(nameOf(e.to)) + '</span>' +
+        '<span class="tag">' + esc(e.type) + '</span></div>';
+    });
+    elPane.innerHTML = html;
+  }
+
+  function viewLabel(v) {
+    if (v === 1) return '只看直接影响';
+    if (v === 2) return '只看间接影响';
+    if (v === 3) return '只看潜在影响';
+    return '显示全部等级';
+  }
+
+  function visibleImpactItems() {
+    if (!impactData) return [];
+    if (activeView === 'all') return impactData.items;
+    return impactData.items.filter(function (i) { return i.level === activeView; });
+  }
+
+  function redrawCanvas() {
+    if (!impactData) return;
+    post({
+      type: 'redraw',
+      items: visibleImpactItems(),
+      sessionId: impactData.sessionId,
+      showCallout: elShowCallout.checked
+    });
+  }
+
+  function renderImpact() {
+    if (!impactData) {
+      elPane.innerHTML = '<div class="empty">选中一个节点，点上面的「影响节点显示」或「AI 影响分析」。<br>' +
+        '会一次分析出全部等级，再在这里用子栏目切换直接 / 间接 / 潜在。</div>';
+      return;
+    }
+    var d = impactData;
+    var isText = d.mode === 'text';
+    var semanticCount = d.items.filter(function (i) { return i.source === 'semantic'; }).length;
+    var labels = isText
+      ? { 1: '完全相同', 2: '含关键词', 3: '潜在', 0: '语义' }
+      : { 0: '语义', 1: '直接', 2: '间接', 3: '潜在' };
+    var levelList = isText ? [1, 2] : [1, 2, 3];
+    if (semanticCount > 0) levelList = levelList.concat([0]);
+
+    var head = d.mode === 'ai'
+      ? 'AI 变更：' + esc(d.change) + (d.summary ? '<br><span class="muted">' + esc(d.summary) + '</span>' : '')
+      : (isText ? '文本连锁：' + esc(d.rootName) + (d.summary ? '<br><span class="muted">' + esc(d.summary) + '</span>' : '')
+        : '变更源：' + esc(d.rootName));
+
+    var html = '<div class="group-title">' + head + '</div>' +
+      '<div class="hint">' + (isText
+        ? '完全相同 ' + (d.counts[1] || 0) + ' / 含关键词 ' + (d.counts[2] || 0)
+        : '直接 ' + (d.counts[1] || 0) + ' / 间接 ' + (d.counts[2] || 0) + ' / 潜在 ' + (d.counts[3] || 0) +
+          (semanticCount ? ' / 语义 ' + semanticCount : '')) +
+      '</div>';
+
+    if (isText) {
+      html += '<div class="hint">候选来自文本匹配（不看依赖图）：完全相同的文案机械同步，' +
+        '含关键词的句子交给 AI 判断是否需要改写。</div>';
+    }
+
+    if (selectedId && d.rootId && selectedId !== d.rootId) {
+      html += '<div class="hint" style="color:#c0392b">当前选中的不是这个锚点。' +
+        '想看当前节点的影响，点「影响节点显示」会重新分析；想回到锚点，点「回到锚点」。</div>';
+    }
+
+    if (d.mode === 'ai') {
+      var byGraph = d.items.filter(function (i) { return i.source === 'graph'; }).length;
+      var bySibling = d.items.filter(function (i) { return i.source === 'sibling'; }).length;
+      var bySemantic = d.items.filter(function (i) { return i.source === 'semantic'; }).length;
+      html += '<div class="hint">影响集合 = 结构 + 语义：依赖图 ' + byGraph +
+        ' 个 · 同容器 ' + bySibling + ' 个 · 语义 ' + bySemantic +
+        ' 个；AI 为其中 ' + (d.annotated || 0) + ' 条追加了「AI·」说明。</div>';
+
+      if (d.semantic) {
+        var lv = d.semanticLevel === 'strict' ? '严' : (d.semanticLevel === 'broad' ? '宽' : '中');
+        html += '<div class="hint">语义检索：候选 ' + (d.semantic.candidates || 0) +
+          ' 条 · 命中 ' + (d.semantic.hits || 0) + ' 条' +
+          (d.semantic.keywords ? ' · 关键词 ' + d.semantic.keywords + ' 个' : '') +
+          (d.semanticLevel ? '（' + lv + '）' : '') + '</div>';
+        if (d.semantic.error) {
+          html += '<div class="hint" style="color:#c0392b">语义检索出错：' + esc(d.semantic.error) + '</div>';
+        }
+      }
+      if (d.mode === 'ai' && d.scanAdded) {
+        html += '<div class="hint">画布扫描补充了 ' + d.scanAdded + ' 个同组件实例</div>';
+      }
+    }
+
+    // 没有任何影响节点：直接给空状态，不要留着上一条的列表
+    if (!d.items.length) {
+      elPane.innerHTML = html + '<div class="empty">这个节点既没有结构关系（跳转/实例/同容器），<br>' +
+        '也没有检索到语义相关的文案。</div>';
+      return;
+    }
+
+    var tabs = [{ v: 'all', label: '全部', n: d.items.length }];
+    levelList.forEach(function (lv) {
+      tabs.push({
+        v: lv,
+        label: labels[lv],
+        n: d.items.filter(function (i) { return i.level === lv; }).length
+      });
+    });
+    html += '<div class="subtabs">';
+    tabs.forEach(function (t) {
+      html += '<button class="subtab' + (String(activeView) === String(t.v) ? ' active' : '') +
+        '" data-view="' + t.v + '">' + esc(t.label) + '（' + t.n + '）</button>';
+    });
+    html += '</div>';
+
+    var levels = activeView === 'all' ? levelList : [Number(activeView)];
+    var total = 0;
+    levels.forEach(function (k) {
+      var list = d.items.filter(function (i) { return i.level === k; });
+      total += list.length;
+      if (!list.length) {
+        if (activeView !== 'all') html += '<div class="empty">这一档没有受影响节点。</div>';
+        return;
+      }
+      html += '<div class="group-title"><span class="dot l' + k + '"></span>' +
+        labels[k] + '（' + list.length + '）</div>';
+      list.forEach(function (it, idx) {
+        if (idx >= MAX_ROWS) return;
+        var src = it.source === 'graph' ? '图'
+          : (it.source === 'sibling' ? '结构'
+            : (it.source === 'semantic' ? '语义' : (it.source === 'text' ? '文本' : '')));
+        html += '<div class="row" data-select="' + esc(it.id) + '">' +
+          '<span class="from">#' + it.index + '</span>' +
+          '<span class="to" title="' + esc(it.name) + '">' + esc(it.name) + '</span>' +
+          (src ? '<span class="tag src">' + esc(src) + '</span>' : '') +
+          '<span class="tag">' + esc(it.reason) + '</span>' +
+          (it.aiWhy ? '<span class="tag ai" title="AI 语义建议">AI·' + esc(it.aiWhy) + '</span>' : '') +
+          '</div>';
+      });
+    });
+
+    html += '<div class="hint">画布上已标出 ' + d.drawn + ' 个节点（红/橙/黄）；' +
+      '当前列表显示 ' + total + ' 条 · ' + esc(viewLabel(activeView)) +
+      (activeView === 'all' ? '' : '（其余等级的标记已隐藏）') + '。</div>';
+    elPane.innerHTML = html;
+  }
+
+  function renderReview() {
+    var s = reviewState;
+    if (!s || (!isReviewing() && !s.report)) {
+      elPane.innerHTML = '<div class="empty">还没有评审。<br>先做一次影响分析，再点上面的「开始评审」。</div>';
+      return;
+    }
+    if (isReviewing()) {
+      elPane.innerHTML =
+        '<div class="group-title">评审进行中 · ' + esc(s.id) + '</div>' +
+        '<div class="hint">发起者：' + esc(s.ownerName) + '（当前登录：' + esc(s.me) + '）<br>' +
+        '开始时间：' + esc(s.startedAt ? new Date(s.startedAt).toLocaleString() : '—') + '<br>' +
+        '标记节点 ' + s.markCount + ' 个 · 已记录改动 ' + (s.logCount || 0) + ' 个</div>' +
+        '<div class="hint">评审期间分析已冻结：改动会被记录，但不会重算影响链。' +
+        (s.isOwner ? '全部改完后点「结束评审」结算。' : '等发起者结算。') + '</div>';
+      return;
+    }
+    var r = s.report;
+    var html = '<div class="group-title">评审结算 · ' + esc(r.id) + '</div>' +
+      '<div class="hint">发起者 ' + esc(r.ownerName) + ' · 标记 ' + r.total + ' 个节点</div>' +
+      '<div class="group-title">对账</div>' +
+      '<div class="row plain"><span class="from">被修改</span><span class="to">' + r.changed.length + ' 个</span></div>' +
+      '<div class="row plain"><span class="from">未改动</span><span class="to">' + r.unchangedCount + ' 个</span></div>' +
+      '<div class="row plain"><span class="from">已被删除</span><span class="to">' + r.deleted.length + ' 个</span></div>';
+
+    if (r.changed.length) {
+      html += '<div class="group-title">被修改的标记节点</div>';
+      r.changed.forEach(function (c) {
+        html += '<div class="row" data-select="' + esc(c.id) + '">' +
+          '<span class="from">' + esc(LEVEL_NAMES[c.level] || '') + '</span>' +
+          '<span class="to">' + esc(c.name || c.id) + '</span></div>';
+      });
+    }
+    html += '<div class="group-title">越界改动 · 未标记但被改了（' + r.outOfScope.length + '）</div>';
+    if (!r.outOfScope.length) {
+      html += '<div class="hint">没有越界改动，改动都落在标记范围内。</div>';
+    } else {
+      r.outOfScope.forEach(function (o) {
+        html += '<div class="row" data-select="' + esc(o.id) + '">' +
+          '<span class="to">' + esc(o.name || o.id) + '</span>' +
+          '<span class="tag">' + esc((o.props || []).join(',') || '变更') + '</span></div>';
+      });
+    }
+    elPane.innerHTML = html;
+  }
+
+  function fmtVal(v) {
+    if (v === true) return '显示';
+    if (v === false) return '隐藏';
+    var s = String(v == null ? '' : v);
+    return s.length > 18 ? s.slice(0, 17) + '…' : s;
+  }
+
+  function renderSuggest() {
+    if (!suggestData) {
+      elPane.innerHTML = '<div class="empty">先选中一个节点，在「变更描述」里写一句话，<br>' +
+        '再点右上角「影响节点修改建议」。会先自动分析影响，再列出可执行的修改指令。</div>';
+      return;
+    }
+    var d = suggestData;
+    var html = '<div class="group-title">变更：' + esc(d.change) + '</div>';
+    if (d.summary) html += '<div class="hint">' + esc(d.summary) + '</div>';
+    if (d.digest) {
+      if (d.digest.focus !== undefined) {
+        html += '<div class="hint">候选来自影响分析：' + d.digest.focus + ' 个节点（与画布上的标记同一批）</div>';
+      } else {
+        html += '<div class="hint">模型看到的清单：布尔实例 ' + d.digest.boolInstances +
+          ' · 其它实例 ' + d.digest.otherInstances + ' · 组件集 ' + d.digest.componentSets + '</div>';
+      }
+    }
+    html += '<div class="hint">共 ' + d.edits.length + ' 条 · 可应用 ' + d.validCount +
+      ' 条 · 已应用 ' + appliedEdits.size + ' 条</div>';
+
+    var anchorId = (impactData && impactData.rootId) ? impactData.rootId : null;
+    var others = d.edits.filter(function (e) {
+      return e.valid && anchorId && e.id !== anchorId;
+    }).length;
+    if (others > 0) {
+      html += '<div class="hint" style="color:#c25e00">其中 ' + others +
+        ' 条作用于「非锚点」节点，应用前请确认这些条目是否需要勾选。</div>';
+    }
+
+    if (!d.edits.length) {
+      html += '<div class="empty">' + esc(d.note || '模型这次没有给出可用建议。') +
+        (d.skippedNoop ? '<br>其中 ' + d.skippedNoop + ' 条是空操作（from = to），已被过滤。' : '') +
+        '<br>可以试试把变更描述写得更具体，例如「把字体改成 宋体|Bold」或「把【工序性】改为【工序】」。</div>';
+      elPane.innerHTML = html;
+      return;
+    }
+
+    d.edits.forEach(function (e) {
+      var isApplied = appliedEdits.has(e.id);
+      var canCheck = e.valid && !isApplied;
+      var checked = (canCheck && selectedEdits.has(e.index)) ? ' checked' : '';
+      var kindLabel = e.kind === 'font'
+        ? (e.property === 'fontName' ? '字体' : (e.property === 'lineHeight' ? '行高' : '字号'))
+        : (({
+          text: '文本', variant: '变体', boolean: '布尔', visible: '显隐',
+          fill: '填充', opacity: '透明', radius: '圆角',
+          size: '尺寸', spacing: '间距'
+        })[e.kind] || e.kind);
+      html += '<div class="edit-row' + (e.valid ? '' : ' invalid') + '" data-select="' + esc(e.id) + '"' +
+        ' title="点击跳到画布上的这个节点（勾选请点左侧复选框）">' +
+        '<input type="checkbox" data-edit="' + e.index + '"' + checked +
+        (canCheck ? '' : ' disabled') + ' />' +
+        '<span class="kind">' + esc(kindLabel) + '</span>' +
+        '<span class="who" title="' + esc(e.name || e.id) + '">' + esc(e.name || e.id) + '</span>' +
+        '<span class="diff">' + (e.range ? '「' + esc(e.range) + '」 ' : '') +
+        esc(fmtVal(e.from)) + ' → ' + esc(fmtVal(e.to)) + '</span></div>';
+
+      var note = e.why || '';
+      if (e.rangeAuto) {
+        note = (note ? note + ' · ' : '') + '已按描述里的「' + esc(e.range) + '」限定为局部修改';
+      }
+      if (e.correctedFrom !== undefined) {
+        note = (note ? note + ' · ' : '') + 'from 已按当前值校正（模型写的是 ' +
+          esc(fmtVal(e.correctedFrom)) + '）';
+      }
+      if (!e.valid) note = (note ? note + ' · ' : '') + '<b>' + esc(e.reason) + '</b>';
+      if (isApplied) {
+        var after = appliedAfter.get(e.id);
+        note = (note ? note + ' · ' : '') + '已应用' + (after !== undefined ? ' · 现为 ' + esc(after) : '');
+      }
+      if (note) html += '<div class="edit-why">' + note + '</div>';
+    });
+
+    html += '<div class="actions" style="margin-top:10px">' +
+      '<button id="applyEditsBtn" class="primary"' + (selectedEdits.size ? '' : ' disabled') + '>' +
+      '应用选中（' + selectedEdits.size + '）</button></div>';
+
+    if (appliedEdits.size) {
+      html += '<div class="actions" style="margin-top:6px">' +
+        '<button id="revertBtn">回滚本次应用（' + appliedEdits.size + '）</button></div>';
+    }
+    if (d.stale) {
+      html += '<div class="hint" style="color:#c0392b">生成建议之后文档又变了（撤销也算）。' +
+        '要重新给建议，建议先重新做一次影响分析。</div>';
+    }
+    if (d.skippedNoop) {
+      html += '<div class="hint">已自动过滤 ' + d.skippedNoop + ' 条「已经是目标状态」的建议。</div>';
+    }
+    elPane.innerHTML = html;
+  }
+
+  function renderPane() {
+    if (activeTab === 'proto') renderProto();
+    else if (activeTab === 'comp') renderComp();
+    else if (activeTab === 'impact') renderImpact();
+    else if (activeTab === 'review') renderReview();
+    else if (activeTab === 'suggest') renderSuggest();
+    else renderGraphTab();
+  }
+
+  // ---------- 状态同步 ----------
+  function scopeLabel() {
+    var v = elScope.value;
+    if (v === 'node') return '仅选中节点';
+    if (v === 'instances') return '同组件实例';
+    if (v === 'file') return '整个文件';
+    return '相关范围';
+  }
+
+  function updateScopeHint() {
+    if (!selectedId) { elScopeHint.textContent = '未选中节点 → 按整个文件处理'; return; }
+
+    // 影响分析结果和当前选中不是同一个节点：生成建议时会自动重算
+    if (impactData && impactData.rootId && impactData.rootId !== selectedId) {
+      elScopeHint.textContent = '当前选中 ≠ 锚点，生成建议时会自动重新分析';
+      return;
+    }
+    if (impactData && impactData.items && impactData.items.length) {
+      elScopeHint.textContent = '基于影响分析（' + impactData.items.length + ' 个节点），范围设置暂不生效';
+      return;
+    }
+    if (elScope.value === 'related') elScopeHint.textContent = '锚点 + 同页相关对象 + 同组件实例';
+    else if (elScope.value === 'node') elScopeHint.textContent = '只改「' + nameOf(selectedId) + '」及其内部';
+    else if (elScope.value === 'instances') elScopeHint.textContent = '改「' + nameOf(selectedId) + '」所在组件的所有实例';
+    else elScopeHint.textContent = '整个文件';
+  }
+
+  function updateButtons() {
+    var canAnalyze = !!selectedId && !isReviewing();
+
+    // 「局部范围」提示只对文本节点有意义，没选中文本就不显示，避免占地方
+    if (elChangeTip) {
+      elChangeTip.style.display = (selectedType === 'TEXT') ? '' : 'none';
+    }
+
+    btnAn1.disabled = !canAnalyze;
+    btnAn2.disabled = !canAnalyze || !hasApiKey;
+    btnAn2.title = '同样跑一遍图传播，再让 AI 为每个受影响节点写一句语义说明' +
+      (hasApiKey ? '' : '（需先在「AI 接入」里保存 Key）');
+    // 修改建议同样以"当前选中节点"为前提：没选中就整个禁用
+    btnSuggest.disabled = suggestBusy || !selectedId;
+    btnSuggest.title = !selectedId
+      ? '先选中一个节点，再生成修改建议'
+      : '基于影响集合生成可执行的修改指令，校验后勾选应用；Ctrl+Z 可整批撤销';
+    btnBackAnchor.disabled = !(impactData && impactData.rootId);
+    btnBackAnchor.title = impactData && impactData.rootId
+      ? '把画布选中恢复到本次分析的起点：' + nameOf(impactData.rootId)
+      : '还没有分析结果，先点「影响节点显示」';
+  }
+
+  function updateSessionBar() {
+    var s = reviewState;
+    var reviewing = isReviewing();
+    elSessionBar.classList.toggle('reviewing', reviewing);
+    if (reviewing) {
+      elSessionText.textContent = '评审中 · ' + s.ownerName + ' · 标记 ' + s.markCount +
+        ' · 记录改动 ' + (s.logCount || 0) + (s.isOwner ? ' · 你是发起者' : ' · 分析已冻结');
+      elStartReview.disabled = true;
+      elEndReview.disabled = !s.isOwner;
+      elEndReview.title = s.isOwner
+        ? '对标记节点做对账，并列出未标记却被改动的越界项'
+        : '只有发起者（' + s.ownerName + '）可以结束评审';
+    } else {
+      elEndReview.disabled = true;
+      elEndReview.title = '当前没有进行中的评审';
+      if (s && s.report) {
+        elSessionText.textContent = '评审已结算 · 改动 ' + s.report.changed.length +
+          ' / 未动 ' + s.report.unchangedCount + ' / 越界 ' + s.report.outOfScope.length;
+      } else {
+        elSessionText.textContent = '未开始评审';
+      }
+      elStartReview.disabled = !(impactData && impactData.items && impactData.items.length);
+      elStartReview.title = elStartReview.disabled
+        ? '先做一次影响分析，才能开始评审'
+        : '冻结当前分析结果，进入评审模式：期间的改动会被记录，结算时逐条对账';
+    }
+    updateButtons();
+  }
+
+  // ---------- 操作 ----------
+  function switchTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('nav.tabs button').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-tab') === tab);
+    });
+    renderPane();
+  }
+
+  function runImpact() {
+    if (!selectedId) { setStatus('先在画布上选中一个节点', true); return; }
+    setStatus('分析结构影响中：从「' + nameOf(selectedId) + '」展开依赖（全文件，不受范围影响）…');
+    post({ type: 'analyze', rootId: selectedId, depth: 3, showCallout: elShowCallout.checked });
+  }
+
+  // 链条：① 影响节点显示 → ② AI 影响分析 → ③ 影响节点修改建议
+  // ① 不含范围（永远是全文件结构）；范围只在 ② 生效，③ 继承 ②
+  function baseFresh() {
+    return !!(baseData && baseData.rootId === selectedId);
+  }
+
+  function analysisFresh() {
+    return !!(impactData && impactData.mode === 'ai' &&
+      impactData.rootId === selectedId &&
+      (impactData.scope || 'related') === elScope.value &&
+      (!impactData.semanticLevel || impactData.semanticLevel === elSemanticLevel.value));
+  }
+
+  function canChainAI() {
+    return hasApiKey && !!elChange.value.trim();
+  }
+
+  function runAI() {
+    if (!hasApiKey) { setStatus('先在上方「AI 接入」里保存 Key', true); return; }
+    var change = elChange.value.trim();
+    if (!change) { setStatus('先写一句变更描述', true); return; }
+    if (!selectedId) { setStatus('先在画布上选中变更源节点', true); return; }
+
+    // ② 依赖 ①：先确保影响集合存在且与当前锚点/范围一致
+    if (!baseFresh()) {
+      pendingAI = true;
+      btnAn2.disabled = true;
+      setStatus('先分析影响范围（范围：' + scopeLabel() + '）…');
+      post({
+        type: 'analyze',
+        rootId: selectedId,
+        depth: 3,
+        showCallout: elShowCallout.checked,
+        scope: elScope.value
+      });
+      return;
+    }
+
+    btnAn2.disabled = true;
+    setStatus('AI 影响分析中：按范围收敛 + 语义检索 / 写说明…');
+    post({
+      type: 'aiAnalyze',
+      change: change,
+      showCallout: elShowCallout.checked,
+      scope: elScope.value,
+      anchorId: baseData.rootId,
+      impactItems: baseData.items
+    });
+  }
+
+  function runSuggestNow(change) {
+    if (!impactData || !impactData.items) {
+      setStatus('没有可用的影响集合，先点「影响节点显示」', true);
+      return;
+    }
+    suggestBusy = true;
+    btnSuggest.disabled = true;
+    setStatus('生成修改建议中：基于影响分析（' + impactData.items.length + ' 个节点）→ 调用 AI…');
+    post({
+      type: 'suggestEdits',
+      change: change,
+      anchorId: impactData.rootId,
+      scope: elScope.value,
+      impactItems: impactData.items
+    });
+  }
+
+  function runSuggest() {
+    var change = elChange.value.trim();
+    if (!change) { setStatus('先写一句变更描述', true); return; }
+    if (!selectedId) { setStatus('先选中一个节点，再生成修改建议', true); return; }
+
+    // ③ 依赖 ②：没跑②就先自动跑②（② 内部会先确保①存在）
+    if (!baseFresh()) {
+      pendingStage = 'base';
+      suggestBusy = true;
+      btnSuggest.disabled = true;
+      setStatus('先分析影响范围，完成后自动继续…');
+      post({
+        type: 'analyze',
+        rootId: selectedId,
+        depth: 3,
+        showCallout: elShowCallout.checked,
+        scope: elScope.value
+      });
+      return;
+    }
+
+    if (canChainAI() && !analysisFresh()) {
+      pendingStage = 'analysis';
+      suggestBusy = true;
+      btnSuggest.disabled = true;
+      setStatus('先做 AI 影响分析，完成后自动生成建议…');
+      runAI();
+      return;
+    }
+
+    runSuggestNow(change);
+  }
+
+  // ---------- 事件绑定 ----------
+  btnScan.onclick = function () {
+    btnScan.disabled = true;
+    setStatus('扫描中…');
+    post({ type: 'scan' });
+  };
+
+  btnExport.onclick = function () {
+    if (!graph) return;
+    var payload = JSON.stringify({
+      meta: {
+        fileName: graph.fileName, scannedAt: graph.scannedAt,
+        nodeCount: graph.nodeCount, edgeCount: graph.edgeCount
+      },
+      nodes: graph.nodes,
+      edges: graph.edges
+    }, null, 2);
+    navigator.clipboard.writeText(payload).then(function () {
+      setStatus('依赖图 JSON 已复制到剪贴板（' + payload.length + ' 字符）');
+    }).catch(function () {
+      setStatus('复制失败：当前环境不允许写剪贴板', true);
+    });
+  };
+
+  btnAn1.onclick = runImpact;
+  btnAn2.onclick = runAI;
+  btnSuggest.onclick = runSuggest;
+
+  btnBackAnchor.onclick = function () {
+    if (!impactData || !impactData.rootId) return;
+    setStatus('回到锚点：' + nameOf(impactData.rootId));
+    post({ type: 'select', id: impactData.rootId });
+  };
+
+  btnClear.onclick = function () { post({ type: 'clearMarks' }); };
+
+  elScope.onchange = function () {
+    updateScopeHint();
+    pendingAI = false;
+    pendingStage = null;
+    if (impactData && impactData.mode === 'ai') {
+      btnSuggest.classList.remove('next-step');
+      setStatus('范围已改：重新点「AI 影响分析」会按新范围收敛（影响节点显示不受影响）');
+    }
+  };
+
+  elShowCallout.onchange = function () {
+    if (!impactData) {
+      setStatus(elShowCallout.checked ? '下次分析会显示建议气泡' : '下次分析只显示编号');
+      return;
+    }
+    setStatus('重绘标记中…');
+    redrawCanvas();
+  };
+
+  elStartReview.onclick = function () {
+    if (!impactData || !impactData.items || !impactData.items.length) return;
+    setStatus('开始评审：分析将冻结，改动会被记录…');
+    post({ type: 'startReview', items: impactData.items });
+  };
+
+  elEndReview.onclick = function () {
+    setStatus('结算中…');
+    post({ type: 'endReview' });
+  };
+
+  document.getElementById('saveKey').onclick = function () {
+    var key = elApiKey.value.trim();
+    if (!key && !hasApiKey) { setStatus('先粘贴 Key', true); return; }
+    if (elProvider.value === 'custom' && !elBase.value.trim()) {
+      setStatus('自定义服务商需要先填 Base URL', true);
+      return;
+    }
+    elApiKey.value = '';
+    setStatus('保存接入配置…');
+    post({
+      type: 'saveAI',
+      provider: elProvider.value,
+      base: elBase.value,
+      model: elModel.value,
+      key: key || null
+    });
+  };
+
+  elProvider.onchange = function () {
+    elBaseRow.style.display = elProvider.value === 'custom' ? '' : 'none';
+    post({ type: 'saveAI', provider: elProvider.value, base: '', model: '', key: null });
+  };
+
+  document.getElementById('testKey').onclick = function () {
+    elKeyNote.textContent = '正在验证 Key…';
+    post({ type: 'testKey' });
+  };
+
+  // ---------- 变更描述历史 ----------
+  function renderHistoryMenu() {
+    if (!changeHistory.length) {
+      elHistoryMenu.innerHTML = '<div class="history-empty">还没有历史记录</div>';
+      return;
+    }
+    elHistoryMenu.innerHTML = changeHistory.map(function (text, i) {
+      return '<div class="history-item" data-history="' + i + '" title="' + esc(text) + '">' +
+        esc(text) + '</div>';
+    }).join('');
+  }
+
+  elHistoryBtn.onclick = function (ev) {
+    ev.stopPropagation();
+    elHistoryMenu.classList.toggle('open');
+  };
+
+  elHistoryMenu.onclick = function (ev) {
+    var item = ev.target.closest ? ev.target.closest('.history-item') : null;
+    if (!item) return;
+    var idx = Number(item.getAttribute('data-history'));
+    if (changeHistory[idx] !== undefined) {
+      elChange.value = changeHistory[idx];
+      elChange.focus();
+      updateChangeTip();
+    }
+    elHistoryMenu.classList.remove('open');
+  };
+
+  document.addEventListener('click', function (ev) {
+    if (elHistoryMenu.classList.contains('open') &&
+        !elHistoryMenu.contains(ev.target) && ev.target !== elHistoryBtn) {
+      elHistoryMenu.classList.remove('open');
+    }
+  });
+
+  /** 清空输入但保留历史（结束评审 / 应用完全部变更时调用）。 */
+  function clearChangeText(reason) {
+    if (!elChange.value.trim()) return;
+    elChange.value = '';
+    updateChangeTip();
+    setStatus(reason || '已清空变更描述（可从「历史」找回）');
+  }
+
+  // ---------- 变更描述的「局部范围」提示 ----------
+  var DEFAULT_TIP = '用【】或[]或“”包住的片段 = 只改这几个字；不写括号 = 改整段（如：把【机制】改成宋体加粗）';
+
+  function quotedFragments(text) {
+    var out = [];
+    var s = String(text || '');
+    // 与 code.js 保持一致的括号集合
+    var re = /「([^」]{1,30})」|『([^』]{1,30})』|【([^】]{1,30})】|\[([^\]]{1,30})\]|“([^”]{1,30})”|"([^"]{1,30})"|'([^']{1,30})'/g;
+    var m = null;
+    while ((m = re.exec(s)) !== null) {
+      var frag = String(m[1] || m[2] || m[3] || m[4] || m[5] || m[6] || m[7] || '').trim();
+      if (frag && out.indexOf(frag) < 0) out.push(frag);
+    }
+    return out;
+  }
+
+  function updateChangeTip() {
+    var list = quotedFragments(elChange.value);
+    if (list.length === 1) {
+      elChangeTip.innerHTML = '已识别局部修改：只改【' + esc(list[0]) + '】这一段，其余部分不动';
+      return;
+    }
+    if (list.length > 1) {
+      elChangeTip.textContent = '识别到多个括号片段，不会自动限定范围；只想改一处时只保留一个【】';
+      return;
+    }
+    elChangeTip.textContent = DEFAULT_TIP;
+  }
+
+  elChange.addEventListener('input', updateChangeTip);
+
+  elSemanticLevel.onchange = function () {
+    post({ type: 'setSemanticLevel', level: elSemanticLevel.value });
+    setStatus('语义检索等级：' + elSemanticLevel.options[elSemanticLevel.selectedIndex].text);
+    // 等级只影响②（以及由②派生的③），① 不受影响
+    if (impactData && impactData.mode === 'ai') {
+      btnSuggest.classList.remove('next-step');
+      setStatus('语义等级已改：需要重新点「AI 影响分析」才会按新等级检索');
+    }
+  };
+
+  document.querySelectorAll('nav.tabs button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      switchTab(btn.getAttribute('data-tab'));
+    });
+  });
+
+  elPane.addEventListener('click', function (ev) {
+    var sub = ev.target.closest ? ev.target.closest('.subtab') : null;
+    if (sub) {
+      var v = sub.getAttribute('data-view');
+      activeView = (v === 'all') ? 'all' : Number(v);
+      renderPane();
+      redrawCanvas();
+      setStatus(viewLabel(activeView) + ' · 画布同步切换');
+      return;
+    }
+
+    if (ev.target.id === 'applyEditsBtn') {
+      var list = (suggestData ? suggestData.edits : []).filter(function (e) {
+        return e.valid && selectedEdits.has(e.index);
+      });
+      if (!list.length) { setStatus('没有勾选可应用的修改'); return; }
+      var otherCount = list.filter(function (e) {
+        return impactData && impactData.rootId && e.id !== impactData.rootId;
+      }).length;
+      setStatus('应用中：' + list.length + ' 处' +
+        (otherCount ? '（含 ' + otherCount + ' 条非锚点节点）' : '') + '…');
+      post({ type: 'applyEdits', edits: list });
+      return;
+    }
+
+    if (ev.target.id === 'revertBtn') {
+      var revertList = Array.from(appliedInfo.values());
+      if (!revertList.length) return;
+      setStatus('回滚中：' + revertList.length + ' 处…');
+      post({ type: 'revertEdits', edits: revertList });
+      return;
+    }
+
+    if (ev.target.tagName === 'INPUT') return;
+    var editRow = ev.target.closest ? ev.target.closest('.edit-row[data-select]') : null;
+    if (editRow) {
+      post({ type: 'select', id: editRow.getAttribute('data-select') });
+      return;
+    }
+    var row = ev.target.closest ? ev.target.closest('.row[data-select]') : null;
+    if (row) {
+      var targetId = row.getAttribute('data-select');
+      setStatus('定位到 ' + nameOf(targetId) + ' …');
+      post({ type: 'select', id: targetId });
+    }
+  });
+
+  elPane.addEventListener('change', function (ev) {
+    var input = ev.target;
+    if (!input || !input.getAttribute || input.getAttribute('data-edit') === null) return;
+    var idx = Number(input.getAttribute('data-edit'));
+    if (input.checked) selectedEdits.add(idx); else selectedEdits.delete(idx);
+    var btn = document.getElementById('applyEditsBtn');
+    if (btn) {
+      btn.textContent = '应用选中（' + selectedEdits.size + '）';
+      btn.disabled = !selectedEdits.size;
+    }
+  });
+
+  // ---------- 消息 ----------
+  window.onmessage = function (event) {
+    var msg = event.data && event.data.pluginMessage;
+    if (!msg) return;
+
+    if (msg.type === 'graph') {
+      graph = msg.data;
+      btnScan.disabled = false;
+      renderStats(graph);
+      setStatus('扫描完成 · ' + fmt(graph.nodeCount) + ' 节点 · ' + graph.durationMs + ' ms');
+      updateSessionBar();
+      updateScopeHint();
+      renderPane();
+    } else if (msg.type === 'selection') {
+      if (msg.node) {
+        selectedId = msg.node.id;
+        selectedType = msg.node.type;
+        elSelName.textContent = msg.node.name + '（' + msg.node.type + '）';
+      } else {
+        selectedId = null;
+        selectedType = null;
+        elSelName.textContent = msg.count > 1 ? '选中了 ' + msg.count + ' 个节点' : '未选中';
+      }
+      updateButtons();
+      updateScopeHint();
+      if (activeTab === 'graph') renderPane();
+    } else if (msg.type === 'progress') {
+      setStatus(msg.text);
+    } else if (msg.type === 'error') {
+      btnScan.disabled = false;
+      suggestBusy = false;
+      pendingStage = null;
+      pendingAI = false;
+      updateButtons();
+      setStatus(msg.text, true);
+    } else if (msg.type === 'selected') {
+      setStatus('已定位：' + msg.name);
+    } else if (msg.type === 'cleared') {
+      impactData = null;
+      baseData = null;
+      activeView = 'all';
+      suggestBusy = false;
+      pendingStage = null;
+      pendingAI = false;
+      btnSuggest.classList.remove('next-step');
+      updateButtons();
+      updateSessionBar();
+      if (activeTab === 'impact') renderPane();
+      setStatus('已清除画布标记');
+    } else if (msg.type === 'redrawn') {
+      if (impactData) impactData.drawn = msg.drawn;
+      if (activeTab === 'impact') renderPane();
+      setStatus('已重绘 ' + msg.drawn + ' 个标记');
+    } else if (msg.type === 'impact') {
+      var keepView = (impactData && impactData.rootId === msg.data.rootId) ? activeView : null;
+      if (msg.data.mode === 'ai') {
+        impactData = msg.data;              // ② 的分析结果
+      } else {
+        baseData = msg.data;                // ① 的结构集合（全文件，不含范围）
+        impactData = msg.data;
+      }
+      activeView = keepView || 'all';
+      if (msg.data.mode === 'text' && Number(activeView) === 3) activeView = 'all';
+      updateButtons();
+      updateSessionBar();
+      updateScopeHint();
+      switchTab('impact');
+      if (msg.data.mode === 'ai' && msg.data.change) {
+        post({ type: 'pushHistory', text: msg.data.change });
+      }
+
+      if (pendingAI) {
+        // ① 算完了，继续 ②
+        pendingAI = false;
+        setStatus('影响集合已就绪，继续 AI 影响分析…');
+        runAI();
+        return;
+      }
+
+      if (pendingStage === 'base') {
+        pendingStage = null;
+        if (canChainAI() && !analysisFresh()) {
+          pendingStage = 'analysis';
+          setStatus('影响集合已就绪，继续 AI 影响分析…');
+          runAI();
+        } else {
+          runSuggestNow(elChange.value.trim());
+        }
+        return;
+      }
+
+      if (pendingStage === 'analysis') {
+        pendingStage = null;
+        setStatus('AI 影响分析完成，继续生成修改建议…');
+        runSuggestNow(elChange.value.trim());
+        return;
+      }
+
+      btnSuggest.classList.add('next-step');
+      setStatus('完成 · 直接 ' + (msg.data.counts[1] || 0) + ' / 间接 ' + (msg.data.counts[2] || 0) +
+        ' / 潜在 ' + (msg.data.counts[3] || 0) +
+        (msg.data.counts[0] ? ' / 语义 ' + msg.data.counts[0] : '') +
+        ' · 画布已标记 ' + msg.data.drawn + ' 个节点 · 可继续生成修改建议');
+    } else if (msg.type === 'history') {
+      changeHistory = Array.isArray(msg.data) ? msg.data : [];
+      renderHistoryMenu();
+    } else if (msg.type === 'semanticLevel') {
+      if (msg.data && msg.data.level) elSemanticLevel.value = msg.data.level;
+    } else if (msg.type === 'keyStatus') {
+      var ks = msg.data || {};
+      hasApiKey = !!ks.hasKey;
+      elProvider.value = ks.provider || 'deepseek';
+      elBaseRow.style.display = elProvider.value === 'custom' ? '' : 'none';
+      elBase.value = ks.base || '';
+      elModel.value = ks.model || '';
+      elModel.placeholder = ks.defaultModel || '模型名';
+      if (ks.saved === false) {
+        elKeyNote.textContent = '保存失败，请重试';
+      } else if (hasApiKey) {
+        elKeyNote.textContent = '已接入：' + (ks.label || '') + ' · ' + (ks.model || '默认模型');
+      } else {
+        elKeyNote.textContent = '未接入 AI：选服务商、填模型和 Key 后保存';
+      }
+      updateButtons();
+    } else if (msg.type === 'keyTest') {
+      elKeyNote.textContent = msg.text;
+    } else if (msg.type === 'edits') {
+      suggestBusy = false;
+      btnSuggest.classList.remove('next-step');
+      suggestData = msg.data;
+      if (msg.data && msg.data.change) post({ type: 'pushHistory', text: msg.data.change });
+      appliedEdits = new Set();
+      appliedInfo = new Map();
+      appliedAfter = new Map();
+      // 语义命中的节点默认不勾选（判断本身不确定，交给人挑）
+      var semanticIds = new Set();
+      if (impactData && impactData.items) {
+        impactData.items.forEach(function (it) {
+          if (it.source === 'semantic') semanticIds.add(it.id);
+        });
+      }
+      selectedEdits = new Set(msg.data.edits.filter(function (e) {
+        return e.valid && !semanticIds.has(e.id);
+      }).map(function (e) { return e.index; }));
+      switchTab('suggest');
+      updateButtons();
+      var skippedSemantic = msg.data.edits.filter(function (e) {
+        return e.valid && semanticIds.has(e.id);
+      }).length;
+      var covText = '';
+      if (msg.data.coverage) {
+        covText = ' · 实例覆盖 ' + msg.data.coverage.covered + '/' + msg.data.coverage.instances;
+        if (msg.data.coverage.crossPage) {
+          covText += ' · 跨页覆盖 ' + msg.data.coverage.crossCovered + '/' + msg.data.coverage.crossPage;
+        }
+      }
+      setStatus('生成 ' + msg.data.edits.length + ' 条建议 · ' + msg.data.validCount +
+        ' 条可应用' + (skippedSemantic ? ' · 其中 ' + skippedSemantic + ' 条语义命中默认未勾选' : '') +
+        covText + ' · 勾选后点应用');
+    } else if (msg.type === 'applyResult') {
+      var appliedList = msg.data.applied || [];
+      appliedList.forEach(function (item) {
+        appliedEdits.add(item.id);
+        appliedInfo.set(item.id, item);
+        if (item.after !== undefined) appliedAfter.set(item.id, item.after);
+        (suggestData ? suggestData.edits : []).forEach(function (e) {
+          if (e.id === item.id) selectedEdits.delete(e.index);
+        });
+      });
+      renderPane();
+      var remaining = (suggestData ? suggestData.edits : []).filter(function (e) {
+        return e.valid && !appliedEdits.has(e.id);
+      }).length;
+      if (appliedList.length) {
+        post({ type: 'select', id: appliedList[0].id });
+        setStatus('已应用 ' + appliedList.length + ' 处，已跳到第 1 处 · 右侧面板可核对 · Ctrl+Z 整批撤销' +
+          (msg.data.failed.length ? ' · 失败 ' + msg.data.failed.length + ' 处' : ''));
+        if (remaining === 0) {
+          clearChangeText('已应用全部变更，变更描述已清空（可从「历史」找回）');
+        }
+      } else {
+        setStatus('没有成功应用任何修改' +
+          (msg.data.failed.length ? '：' + msg.data.failed[0].reason : '') + '，详见列表', true);
+      }
+    } else if (msg.type === 'revertResult') {
+      var reverted = msg.data.reverted || [];
+      reverted.forEach(function (r) {
+        appliedEdits.delete(r.id);
+        appliedInfo.delete(r.id);
+        appliedAfter.delete(r.id);
+      });
+      renderPane();
+      setStatus('已回滚 ' + reverted.length + ' 处' +
+        (msg.data.failed.length ? '，失败 ' + msg.data.failed.length + ' 处' : ''));
+    } else if (msg.type === 'aiError') {
+      suggestBusy = false;
+      pendingStage = null;
+      pendingAI = false;
+      updateButtons();
+      setStatus('AI 失败：' + msg.text, true);
+    } else if (msg.type === 'review') {
+      var wasReviewing = isReviewing();
+      reviewState = msg.data;
+      updateSessionBar();
+      if (activeTab === 'review') renderPane();
+      if (wasReviewing && !isReviewing() && reviewState && reviewState.report) {
+        clearChangeText('评审已结算，变更描述已清空（可从「历史」找回）');
+      }
+    } else if (msg.type === 'reviewTick') {
+      reviewState = msg.data;
+      updateSessionBar();
+      if (activeTab === 'review') renderPane();
+    } else if (msg.type === 'reviewError') {
+      setStatus(msg.text, true);
+    }
+  };
+
+  // ---------- 面板尺寸 ----------
+  (function () {
+    var handle = document.getElementById('resizeHandle');
+    var dragging = false, sx = 0, sy = 0, sw = 0, sh = 0;
+    handle.addEventListener('mousedown', function (e) {
+      dragging = true; sx = e.clientX; sy = e.clientY;
+      sw = window.innerWidth; sh = window.innerHeight;
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', function (e) {
+      if (!dragging) return;
+      var w = Math.min(1200, Math.max(360, sw + (e.clientX - sx)));
+      var h = Math.min(1200, Math.max(420, sh + (e.clientY - sy)));
+      post({ type: 'resize', w: Math.round(w), h: Math.round(h) });
+    });
+    window.addEventListener('mouseup', function () { dragging = false; });
+  })();
+
+  updateButtons();
+  updateScopeHint();
+  renderHistoryMenu();
+  updateChangeTip();
+  post({ type: 'loadHistory' });
+  post({ type: 'scan' });
+})();
+</script>
+</body>
+</html>
